@@ -1,0 +1,10 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "ruby",
+      "changelog-path": "CHANGELOG.md",
+      "version-file": "lib/enm_test/version.rb",
+      "include-v-in-tag": true
+    }
+  }
+}
