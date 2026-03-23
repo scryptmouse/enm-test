@@ -10,6 +10,9 @@ on:
       - "cross-gem/*"
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 permissions:
   actions: write
   contents: read
@@ -77,7 +80,10 @@ jobs:
         id: cross-gem
         run: |
           gem install rb_sys --no-document
-          rb-sys-dock --platform ${{ matrix.platform }} --ruby-versions "3.3,3.4,4.0" --mount-toolchains --build
+          if [[ "${{ matrix.platform }}" == *-mingw-ucrt ]]; then
+            export RUSTFLAGS="-C target-feature=+crt-static ${RUSTFLAGS:-}"
+          fi
+          rb-sys-dock --platform ${{ matrix.platform }} --ruby-versions "3.4,4.0" --mount-toolchains --build
           echo "gem-path=$(find pkg -name '*-${{ matrix.platform }}.gem')" >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v7
@@ -106,7 +112,7 @@ jobs:
             container: alpine/git:latest
             platform: x86_64-linux-musl
           - os: windows-latest
-            platform: x64-mingw32-ucrt
+            platform: x64-mingw-ucrt
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
     steps:
@@ -124,11 +130,10 @@ jobs:
       # This only works on official runners
       - name: Setup Ruby
         if: ${{ matrix.container == '' }}
-        uses: oxidize-rb/actions/setup-ruby-and-rust@v1
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: 4.0
-          bundler-cache: true
-          cargo-cache: false
+          bundler-cache: false
 
       # Works for Alpine
       - name: Setup Ruby (Alpine)

@@ -6,6 +6,9 @@ on:
   #    - main
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 permissions:
   contents: write
   issues: write
@@ -36,7 +39,7 @@ jobs:
         id: fetch
         with:
           supported-ruby-platforms: |
-            exclude: ["aarch64-mingw-ucrt", "arm-linux", "x64-mingw-ucrt", "x64-mingw32"]
+            exclude: ["x64-mingw32"]
           stable-ruby-versions: |
             exclude: ["3.2", "3.3", "3.4", "head"]
 
