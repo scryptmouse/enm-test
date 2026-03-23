@@ -60,7 +60,10 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          bundler-cache: true
+          ruby-version: '4.0'
+          # Let cross-gem resolve/build dependencies in its own environment.
+          # Host-side bundler cache can leak incompatible native extensions.
+          bundler-cache: false
 
       - uses: oxidize-rb/actions/cross-gem@v1
         id: cross-gem
