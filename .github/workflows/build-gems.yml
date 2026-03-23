@@ -60,11 +60,14 @@ jobs:
       - uses: oxidize-rb/actions/cross-gem@v1
         id: cross-gem
         continue-on-error: true
+        env:
+          RUBY_TARGET: ${{ matrix.platform }}
         with:
           platform: ${{ matrix.platform }}
           ruby-versions: ${{ join(fromJSON(needs.ci-data.outputs.result).stable-ruby-versions, ',') }}
 
       - uses: actions/upload-artifact@v7
+        continue-on-error: true
         with:
           name: cross-gem
           path: ${{ steps.cross-gem.outputs.gem-path }}
