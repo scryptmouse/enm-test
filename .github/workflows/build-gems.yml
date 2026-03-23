@@ -55,7 +55,8 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          bundler-cache: true
+          ruby-version: '4.0.1'
+          bundler-cache: false
 
       - uses: oxidize-rb/actions/cross-gem@v1
         id: cross-gem
