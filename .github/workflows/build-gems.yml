@@ -93,20 +93,20 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rubyVersion: ["4.0"]
         # Container defaults to empty/none, but additional container for Alpine
         # added later
         container: [""]
 
         include:
           - os: ubuntu-latest
-            rubyPlatform: x86_64-linux
+            platform: x86_64-linux
           - os: macos-latest
-            rubyPlatform: arm64-darwin
+            platform: arm64-darwin
           - os: ubuntu-latest
-            rubyVersion: "4.0"
             container: alpine/git:latest
-            rubyPlatform: x86_64-linux-musl
+            platform: x86_64-linux-musl
+          - os: windows-latest
+            platform: x64-mingw32-ucrt
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
     steps:
@@ -118,7 +118,7 @@ jobs:
       - name: Download gem
         uses: actions/download-artifact@v8
         with:
-          name: ${{ matrix.rubyPlatform }}-gem
+          name: cross-gem-${{ matrix.platform }}
           path: local-gem
 
       # This only works on official runners
@@ -126,7 +126,7 @@ jobs:
         if: ${{ matrix.container == '' }}
         uses: oxidize-rb/actions/setup-ruby-and-rust@v1
         with:
-          ruby-version: "${{ matrix.rubyVersion }}"
+          ruby-version: 4.0
           bundler-cache: true
           cargo-cache: false
 
@@ -136,4 +136,4 @@ jobs:
         run: apk add --no-cache ruby ruby-dev ruby-bundler build-base
 
       - name: Run smoke test
-        run: ruby ./smoke_test/smoke_test_gem.rb 'local-gem/*-${{ matrix.rubyPlatform }}.gem'
+        run: ruby ./smoke_test/smoke_test_gem.rb 'local-gem/*-${{ matrix.platform }}.gem'
