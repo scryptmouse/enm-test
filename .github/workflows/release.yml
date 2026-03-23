@@ -36,7 +36,7 @@ jobs:
         id: fetch
         with:
           supported-ruby-platforms: |
-            exclude: ["x64-mingw32"]
+            exclude: ["aarch64-mingw-ucrt", "x64-mingw-ucrt", "x64-mingw32"]
           stable-ruby-versions: |
             exclude: ["3.2", "3.3", "3.4", "head"]
 
@@ -67,8 +67,6 @@ jobs:
 
       - uses: oxidize-rb/actions/cross-gem@v1
         id: cross-gem
-        env:
-          RUBY_TARGET: ${{ matrix.platform }}
         with:
           platform: ${{ matrix.platform }}
           ruby-versions: ${{ join(fromJSON(needs.ci-data.outputs.result).stable-ruby-versions, ',') }}
