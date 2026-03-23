@@ -67,6 +67,8 @@ jobs:
 
       - uses: oxidize-rb/actions/cross-gem@v1
         id: cross-gem
+        env:
+          RUBY_TARGET: ${{ matrix.platform }}
         with:
           platform: ${{ matrix.platform }}
           ruby-versions: ${{ join(fromJSON(needs.ci-data.outputs.result).stable-ruby-versions, ',') }}
