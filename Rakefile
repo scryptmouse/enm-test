@@ -1,13 +1,20 @@
 # frozen_string_literal: true
 
 require "bundler/gem_tasks"
-require "rspec/core/rake_task"
 
-RSpec::Core::RakeTask.new(:spec)
+begin
+  require "rspec/core/rake_task"
+  RSpec::Core::RakeTask.new(:spec)
+rescue LoadError
+  # Allow build-only environments to skip test dependencies.
+end
 
-require "rubocop/rake_task"
-
-RuboCop::RakeTask.new
+begin
+  require "rubocop/rake_task"
+  RuboCop::RakeTask.new
+rescue LoadError
+  # Allow build-only environments to skip lint dependencies.
+end
 
 require "rb_sys/extensiontask"
 
@@ -19,4 +26,7 @@ RbSys::ExtensionTask.new("enm_test", GEMSPEC) do |ext|
   ext.lib_dir = "lib/enm_test"
 end
 
-task default: %i[compile spec rubocop]
+default_tasks = [:compile]
+default_tasks << :spec if Rake::Task.task_defined?("spec")
+default_tasks << :rubocop if Rake::Task.task_defined?("rubocop")
+task default: default_tasks

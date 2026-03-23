@@ -63,13 +63,19 @@ jobs:
       - uses: oxidize-rb/actions/cross-gem@v1
         id: cross-gem
         env:
-          RUBY_TARGET: ${{ matrix.platform }}
+          BUNDLE_WITHOUT: development:test:lint
+          # CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          # CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
+          # AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
+          # CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: aarch64-linux-musl-gcc
+          # CC_aarch64_unknown_linux_musl: aarch64-linux-musl-gcc
+          # AR_aarch64_unknown_linux_musl: aarch64-linux-musl-ar
         with:
           platform: ${{ matrix.platform }}
           ruby-versions: ${{ join(fromJSON(needs.ci-data.outputs.result).stable-ruby-versions, ',') }}
 
       - uses: actions/upload-artifact@v7
         with:
-          name: cross-gem
+          name: cross-gem-${{ matrix.platform }}
           overwrite: true
           path: ${{ steps.cross-gem.outputs.gem-path }}
