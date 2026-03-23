@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+## [0.4.2](https://github.com/scryptmouse/enm-test/compare/v0.4.1...v0.4.2) (2026-03-23)
+
+
+### Bug Fixes
+
+* try fixing ci again. drop support for windows ([2d376d1](https://github.com/scryptmouse/enm-test/commit/2d376d16488cac7442f2166fb9535ecd163f566c))
+
 ## [0.4.1](https://github.com/scryptmouse/enm-test/compare/v0.4.0...v0.4.1) (2026-03-23)
 
 
