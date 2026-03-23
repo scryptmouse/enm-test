@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+## [0.4.1](https://github.com/scryptmouse/enm-test/compare/v0.4.0...v0.4.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* try to get ci release working ([2055acd](https://github.com/scryptmouse/enm-test/commit/2055acda3a46e366d0699214b79e43f0594f5d2c))
+
 ## [0.4.0](https://github.com/scryptmouse/enm-test/compare/v0.3.0...v0.4.0) (2026-03-23)
 
 
