@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+## [0.4.3](https://github.com/scryptmouse/enm-test/compare/v0.4.2...v0.4.3) (2026-03-23)
+
+
+### Bug Fixes
+
+* drop support for arm-linux ([faf8cef](https://github.com/scryptmouse/enm-test/commit/faf8cef3ee820521e249d495f3280a6623bf1fe8))
+
 ## [0.4.2](https://github.com/scryptmouse/enm-test/compare/v0.4.1...v0.4.2) (2026-03-23)
 
 
