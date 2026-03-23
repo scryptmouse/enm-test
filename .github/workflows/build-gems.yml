@@ -3,12 +3,15 @@ name: Build gems
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
       - "cross-gem/*"
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: read
   packages: write
 
@@ -31,9 +34,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: ruby/setup-ruby@v1
+      - name: Setup Ruby and Rust
+        uses: oxidize-rb/actions/setup-ruby-and-rust@v1
         with:
+          ruby-version: "4.0"
           bundler-cache: true
+          cargo-cache: true
+          cache-version: v1-source
+
+      - name: Fix gem directory permissions
+        run: chmod -R o-w "$RUNNER_TOOL_CACHE/Ruby" || true
 
       - name: Build gem
         run: bundle exec rake build
@@ -41,7 +51,6 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: source-gem
-          overwrite: true
           path: pkg/*.gem
 
   cross-gem:
@@ -55,27 +64,76 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: ruby/setup-ruby@v1
+      - name: Setup Ruby and Rust
+        uses: oxidize-rb/actions/setup-ruby-and-rust@v1
         with:
-          ruby-version: '4.0.1'
-          bundler-cache: false
+          ruby-version: "4.0"
+          bundler-cache: false # Needed so 'bundler install' doesn't run
+          cargo-cache: true
+          cargo-vendor: true
+          cache-version: v1-${{ matrix.platform }}
 
-      - uses: oxidize-rb/actions/cross-gem@v1
+      - name: Cross compile gem
         id: cross-gem
-        env:
-          BUNDLE_WITHOUT: development:test:lint
-          # CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-          # CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
-          # AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
-          # CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: aarch64-linux-musl-gcc
-          # CC_aarch64_unknown_linux_musl: aarch64-linux-musl-gcc
-          # AR_aarch64_unknown_linux_musl: aarch64-linux-musl-ar
-        with:
-          platform: ${{ matrix.platform }}
-          ruby-versions: ${{ join(fromJSON(needs.ci-data.outputs.result).stable-ruby-versions, ',') }}
+        run: |
+          gem install rb_sys --no-document
+          rb-sys-dock --platform ${{ matrix.platform }} --ruby-versions "3.3,3.4,4.0" --mount-toolchains --build
+          echo "gem-path=$(find pkg -name '*-${{ matrix.platform }}.gem')" >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v7
         with:
+          if-no-files-found: error
           name: cross-gem-${{ matrix.platform }}
-          overwrite: true
           path: ${{ steps.cross-gem.outputs.gem-path }}
+
+  smoke-test-gems:
+    needs:
+      - cross-gem
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rubyVersion: ["4.0"]
+        # Container defaults to empty/none, but additional container for Alpine
+        # added later
+        container: [""]
+
+        include:
+          - os: ubuntu-latest
+            rubyPlatform: x86_64-linux
+          - os: macos-latest
+            rubyPlatform: arm64-darwin
+          - os: ubuntu-latest
+            rubyVersion: "4.0"
+            container: alpine/git:latest
+            rubyPlatform: x86_64-linux-musl
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download gem
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.rubyPlatform }}-gem
+          path: local-gem
+
+      # This only works on official runners
+      - name: Setup Ruby
+        if: ${{ matrix.container == '' }}
+        uses: oxidize-rb/actions/setup-ruby-and-rust@v1
+        with:
+          ruby-version: "${{ matrix.rubyVersion }}"
+          bundler-cache: true
+          cargo-cache: false
+
+      # Works for Alpine
+      - name: Setup Ruby (Alpine)
+        if: ${{ matrix.container == 'alpine/git:latest' }}
+        run: apk add --no-cache ruby ruby-dev ruby-bundler build-base
+
+      - name: Run smoke test
+        run: ruby ./smoke_test/smoke_test_gem.rb 'local-gem/*-${{ matrix.rubyPlatform }}.gem'
